@@ -1,0 +1,36 @@
+using bit vectors;
+using variables;
+using maths;
+using comparisons;
+
+make number variables up to 1000;
+
+#upper_limit = _ONE_THOUSAND + _ONE_THOUSAND;
+upper_limit = _ONE_HUNDRED;
+
+sieve: bit vector;
+sieve = _THREE;
+# 3 == 0b...011 = [1, 1, 0, ...]
+
+clear index;
+incr index;
+incr index;
+index_le_upper_limit = _ONE;
+while index_le_upper_limit not 0 do;
+    is_index_composite = sieve[index];
+    is_index_prime = not is_index_composite;
+    while is_index_prime not 0 do;
+        print index;
+        multiple_of_index = index;
+        times_to_increase_the_multiple r _ = upper_limit / index;
+        while times_to_increase_the_multiple not 0 do;
+            print multiple_of_index;
+            sieve[multiple_of_index] = 1;
+            multiple_of_index += index;
+            decr times_to_increase_the_multiple;
+        end;
+        clear is_index_prime;
+    end;
+
+    index_le_upper_limit = index <= upper_limit;
+end;
