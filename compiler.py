@@ -22,12 +22,13 @@ from errors import ProgramError, UndefinedVariableError, NegativeError, Syntacti
 def _compile_code(code: list[ProcessedLine]) -> CodeType:
     """Converts BB code to compiled Python code"""
     python_code = []
+    variable_types = {}
     depth = 0
     for line in code:
         if not line:
             python_code.append("")
             continue
-        command, variable_name = line
+        command, variable_name, *others = line
         match command:
             case Command.INCR:
                 python_code.append(f"{"    " * depth}{variable_name} += 1")
@@ -40,7 +41,15 @@ def _compile_code(code: list[ProcessedLine]) -> CodeType:
                 python_code.append(f"{"    " * depth}{variable_name} = 0")
 
             case Command.PRINT:
-                python_code.append(f"{"    " * depth}print({variable_name})")
+                if variable_name not in variable_types:
+                    # int
+                    python_code.append(f"{"    " * depth}print({variable_name})")
+                else:
+                    match variable_types[variable_name]:
+                        case "char":
+                            python_code.append(f"{"    " * depth}print(chr({variable_name}), end=\"\")")
+                        case "bit vector":
+                            python_code.append(f"{"    " * depth}print([int(n) for n in bin({variable_name})[2:][::-1]])")
 
             case Command.WHILE:
                 python_code.append(f"{"    " * depth}while {variable_name} != 0:")
@@ -48,6 +57,13 @@ def _compile_code(code: list[ProcessedLine]) -> CodeType:
 
             case Command.END:
                 depth -= 1
+
+            case Command.TYPE:
+                type = others[0]
+                if type == "int":
+                    variable_types.pop(variable_name)  # variables are ints if not specified
+                else:
+                    variable_types[variable_name] = type
 
             case _:
                 raise ValueError(f"Unexpected Command {command}")
