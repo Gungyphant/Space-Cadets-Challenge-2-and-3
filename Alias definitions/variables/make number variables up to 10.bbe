@@ -22,3 +22,4 @@ incr _X;
 _NINE = _X;
 incr _X;
 _TEN = _X;
+incr _X;

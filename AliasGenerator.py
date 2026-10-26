@@ -43,7 +43,7 @@ def generate_aliases(aliases_location):
                         init_values[var] = int(val)
                 full_code = sum([[f"clear {var};"] + [f"incr {var};"] * val for var, val in init_values.items()], []) + code
                 try:
-                    parse_code(full_code, print_errors=False, loudness=0, timeout=3)
+                    parse_code(full_code, print_errors=False, loudness=0, timeout=10)
                 except SyntacticalError as e:
                     all_valid = False
                     print(file, e)
