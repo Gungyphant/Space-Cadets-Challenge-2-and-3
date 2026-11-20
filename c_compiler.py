@@ -41,13 +41,13 @@ def _bb_to_c(code: list[ProcessedLine]) -> str:
             case Command.PRINT:
                 if variable_name not in variable_types:
                     # int
-                    c_code.append(f"{"    " * depth}printf(\"%i\n\", {variable_name});")
+                    c_code.append(f"{"    " * depth}printf(\"%i\\n\", {variable_name});")
                 else:
                     match variable_types[variable_name]:
                         case "char":
                             c_code.append(f"{"    " * depth}printf(\"%c\", (char) {variable_name});")
                         case "bit vector":
-                            c_code.append(f"{"    " * depth}printf(\"[bit vector]%i\n\", {variable_name});")
+                            c_code.append(f"{"    " * depth}printf(\"[bit vector]%i\\n\", {variable_name});")
 
             case Command.WHILE:
                 c_code.append(f"{"    " * depth}while ({variable_name} != 0) {{")
