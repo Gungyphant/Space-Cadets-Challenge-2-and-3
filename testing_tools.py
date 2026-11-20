@@ -240,7 +240,7 @@ def _test_everything():
     print("\n\nextended:")
     _do_test()
 
-    from compiler import _do_test
+    from python_compiler import _do_test
     print("\n\ncompiler:")
     _do_test()
 
