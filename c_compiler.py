@@ -151,28 +151,28 @@ def _run_exe(executable_filepath: str, *, discard_underscore_prefixed_variables:
     }
 
 
-def execute_file(filepath: str) -> VariableDict:
+def execute_file(filepath: str, **kwargs) -> VariableDict:
     """Execute a BB file, via compiling it to an executable
 
     :param filepath: The path to the BB file
     :return: A dictionary of variable-value pairs
     """
     compile_to_c_file(filepath, "TEMP.c")
-    _compile_c_file("TEMP.c", "TEMP.exe")
+    _compile_c_file("TEMP.c", "TEMP.exe", **kwargs)
     result = _run_exe("TEMP.exe", discard_underscore_prefixed_variables=False)
     os.remove("TEMP.c")
     os.remove("TEMP.exe")
     return result
 
 
-def execute_extended_file(filepath: str) -> VariableDict:
+def execute_extended_file(filepath: str, **kwargs) -> VariableDict:
     """Execute a BBE file, via compiling it to an executable
 
     :param filepath: The path to the BBE file
     :return: A dictionary of variable-value pairs
     """
     extended_compile_to_c_file(filepath, "TEMP.c")
-    _compile_c_file("TEMP.c", "TEMP.exe")
+    _compile_c_file("TEMP.c", "TEMP.exe", **kwargs)
     result = _run_exe("TEMP.exe", discard_underscore_prefixed_variables=True)
     os.remove("TEMP.c")
     os.remove("TEMP.exe")
@@ -183,3 +183,6 @@ if __name__ == "__main__":
     print(execute_file("BB files/Testing/01 Counting.bb"))
     print(execute_extended_file("BB files/Hello, world!.bbe"))
     print(execute_extended_file("BB files/Factorial.bbe"))
+    # execute_extended_file("BB files/Fibbonacci.bbe")
+
+    extended_compile_to_c_file("BB files/Primes.bbe", "Primes.c")
