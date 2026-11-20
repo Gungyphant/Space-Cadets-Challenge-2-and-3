@@ -114,9 +114,9 @@ def compile_c_file(c_filepath: str, executable_filepath: str | None = None, *, o
         f"{f" -o \"{executable_filepath}\"" if executable_filepath is not None else ""}"
        )
 
-    result = subprocess.run(command, shell=True)
+    result = subprocess.run(command, shell=True, capture_output=True)
     if result.returncode != 0:
         # Failed to compile
-        raise SyntacticalError()
+        raise SyntacticalError(result.stderr.decode(sys.stdout.encoding))
     if output_warnings:
         print(result.stdout.decode(sys.stdout.encoding).split("\x0c")[-1], end="")
