@@ -1,7 +1,12 @@
-from main import ProcessedLine, Command, VariableDict
+import subprocess
+import sys
 
-C_START_BOILERPLATE = "int main(void)\n{\n"
-C_END_BOILERPLATE = "\nreturn 0;\n}"
+from errors import SyntacticalError
+from extended import _de_extend_code
+from main import ProcessedLine, Command, VariableDict, _process_program
+
+C_START_BOILERPLATE = "#include <stdio.h>\n\nint main(void)\n{\n"
+C_END_BOILERPLATE = "\n    return 0;\n}"
 
 def _bb_to_c(code: list[ProcessedLine]) -> str:
     """Convert BB code to C code"""
