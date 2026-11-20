@@ -101,7 +101,7 @@ def extended_compile_to_c_file(bbe_filepath: str, c_filepath: str) -> None:
     _bb_to_c_file(_process_program(bare_bones_file), c_filepath)
 
 
-def compile_c_file(c_filepath: str, executable_filepath: str | None = None, *, optimisation_level: int | None = None, output_warnings: bool = False) -> None:
+def _compile_c_file(c_filepath: str, executable_filepath: str | None = None, *, optimisation_level: int | None = None, output_warnings: bool = False) -> None:
     """Compile a C program to an executable
 
     Note: gcc must be in your PATH to use this function
@@ -158,7 +158,7 @@ def execute_file(filepath: str) -> VariableDict:
     :return: A dictionary of variable-value pairs
     """
     compile_to_c_file(filepath, "TEMP.c")
-    compile_c_file("TEMP.c", "TEMP.exe")
+    _compile_c_file("TEMP.c", "TEMP.exe")
     result = _run_exe("TEMP.exe", discard_underscore_prefixed_variables=False)
     os.remove("TEMP.c")
     os.remove("TEMP.exe")
@@ -172,7 +172,7 @@ def execute_extended_file(filepath: str) -> VariableDict:
     :return: A dictionary of variable-value pairs
     """
     extended_compile_to_c_file(filepath, "TEMP.c")
-    compile_c_file("TEMP.c", "TEMP.exe")
+    _compile_c_file("TEMP.c", "TEMP.exe")
     result = _run_exe("TEMP.exe", discard_underscore_prefixed_variables=True)
     os.remove("TEMP.c")
     os.remove("TEMP.exe")
