@@ -23,7 +23,7 @@ ProcessedLine = Tuple[Command, str] | Tuple[Command, str, str] | None  # the str
 VARIABLE_REGEX = r"(\w{2,}|[a-zA-Z_])"
 
 def _process_line(line: str, *, do_strip: bool = True) -> ProcessedLine:
-    """Convert lines to ProcessedLines"""
+    """Convert a line to a ProcessedLine"""
     if do_strip:
         line = line.strip()  # Indentation and trailing whitespace is ignored
 
