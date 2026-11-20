@@ -93,6 +93,9 @@ def _process_program(code: str | list[str]) -> list[ProcessedLine]:
         except ProgramError as e:
             raise _InnerCodeError(e, line_number + 1, line)
         # if processed_line is not None:
+        if processed_line is not None and processed_line[1].startswith("__COMPILER_RESERVED_"):
+            warnings.warn(f"Variable {processed_line[1]} begins with __COMPILER_RESERVED_; this may cause errors in some compilers")
+
         result.append(processed_line)
     return result
 
