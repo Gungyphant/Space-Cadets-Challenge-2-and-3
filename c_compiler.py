@@ -74,7 +74,7 @@ def _bb_to_c(code: list[ProcessedLine]) -> str:
 
     # Add stderr-writing to get the value of the variables
     for variable_name in known_variables:
-        c_code.append(f"    fprintf(stderr, \"{variable_name}=%i\\n\", {variable_name});\n")
+        c_code.append(f"    fprintf(stderr, \"{variable_name}=%i\\n\", {variable_name});")
 
     return C_START_BOILERPLATE + "\n".join(c_code) + C_END_BOILERPLATE
 
