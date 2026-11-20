@@ -93,3 +93,30 @@ def extended_compile_to_c_file(bbe_filepath: str, c_filepath: str) -> None:
         bare_bones_extended_file = f.read()
     bare_bones_file = _de_extend_code(bare_bones_extended_file.splitlines())
     _bb_to_c_file(_process_program(bare_bones_file), c_filepath)
+
+
+def compile_c_file(c_filepath: str, executable_filepath: str | None = None, optimisation_level: int | None = None, output_warnings: bool = False) -> None:
+    """Compile a C program to an executable
+
+    Note: gcc must be in your PATH to use this function
+
+    :param c_filepath: The filepath of the C program to compile
+    :param executable_filepath: The filepath of the compiled executable; if None, gcc's default is used
+    :param optimisation_level: The level of gcc optimisation to use; if None, gcc's default is used
+    :param output_warnings: Should gcc warnings be printed
+    """
+    command = (
+        f"cls & "  # Allow for ignoring of startup command outputs
+        f"gcc "
+        f"{f"-O{optimisation_level} " if optimisation_level is not None else ""}"
+        f"{f"-Wall " if output_warnings else ""}"
+        f"\"{c_filepath}\""
+        f"{f" -o \"{executable_filepath}\"" if executable_filepath is not None else ""}"
+       )
+
+    result = subprocess.run(command, shell=True)
+    if result.returncode != 0:
+        # Failed to compile
+        raise SyntacticalError()
+    if output_warnings:
+        print(result.stdout.decode(sys.stdout.encoding).split("\x0c")[-1], end="")
