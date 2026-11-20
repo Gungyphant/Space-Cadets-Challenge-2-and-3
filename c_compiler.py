@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 
@@ -147,6 +148,34 @@ def _run_exe(executable_filepath: str, *, discard_underscore_prefixed_variables:
             and not (discard_underscore_prefixed_variables and n.startswith("_"))
         )
     }
+
+
+def execute_file(filepath: str) -> VariableDict:
+    """Execute a BB file, via compiling it to an executable
+
+    :param filepath: The path to the BB file
+    :return: A dictionary of variable-value pairs
+    """
+    compile_to_c_file(filepath, "TEMP.c")
+    compile_c_file("TEMP.c", "TEMP.exe")
+    result = _run_exe("TEMP.exe", discard_underscore_prefixed_variables=False)
+    os.remove("TEMP.c")
+    os.remove("TEMP.exe")
+    return result
+
+
+def execute_extended_file(filepath: str) -> VariableDict:
+    """Execute a BBE file, via compiling it to an executable
+
+    :param filepath: The path to the BBE file
+    :return: A dictionary of variable-value pairs
+    """
+    extended_compile_to_c_file(filepath, "TEMP.c")
+    compile_c_file("TEMP.c", "TEMP.exe")
+    result = _run_exe("TEMP.exe", discard_underscore_prefixed_variables=True)
+    os.remove("TEMP.c")
+    os.remove("TEMP.exe")
+    return result
 
 
 if __name__ == "__main__":
