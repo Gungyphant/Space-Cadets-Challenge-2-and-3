@@ -34,6 +34,7 @@ def _bb_to_c(code: list[ProcessedLine]) -> str:
             case Command.CLEAR:
                 if variable_name not in known_variables:
                     c_code.append(f"{"    " * depth}int {variable_name} = 0;")
+                    known_variables.add(variable_name)
                 else:
                     c_code.append(f"{"    " * depth}{variable_name} = 0;")
 
