@@ -39,7 +39,10 @@ def _bb_to_c(code: list[ProcessedLine]) -> str:
                     c_code.append(f"{"    " * depth}{variable_name} = 0;")
 
             case Command.PRINT:
-                if variable_name not in variable_types:
+                if not variable_name:
+                    # Bare print
+                    c_code.append(f"{"    " * depth}printf(\"\\n\");")
+                elif variable_name not in variable_types:
                     # int
                     c_code.append(f"{"    " * depth}printf(\"%i\\n\", {variable_name});")
                 else:
