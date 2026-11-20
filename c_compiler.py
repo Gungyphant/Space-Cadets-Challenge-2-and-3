@@ -34,10 +34,11 @@ def _bb_to_c(code: list[ProcessedLine]) -> str:
 
             case Command.CLEAR:
                 if variable_name not in known_variables:
-                    c_code.append(f"{"    " * depth}int {variable_name} = 0;")
+                    # BB has no concept of scope; all variables must therefore be defined at the top
+                    #  of the program
+                    c_code = [f"    int {variable_name};"] + c_code
                     known_variables.add(variable_name)
-                else:
-                    c_code.append(f"{"    " * depth}{variable_name} = 0;")
+                c_code.append(f"{"    " * depth}{variable_name} = 0;")
 
             case Command.PRINT:
                 if not variable_name:
@@ -179,10 +180,6 @@ def execute_extended_file(filepath: str) -> VariableDict:
 
 
 if __name__ == "__main__":
-    compile_to_c_file("BB files/Testing/01 Counting.bb", "TEMP/01 Counting.c")
-    compile_c_file("TEMP/01 Counting.c", "TEMP/01 Counting.exe")
-    print(_run_exe("TEMP/01 Counting.exe"))
-
-    extended_compile_to_c_file("BB files/Hello, world!.bbe", "TEMP/Hello, world!.c")
-    compile_c_file("TEMP/Hello, world!.c", "TEMP/Hello, world!.exe")
-    print(_run_exe("TEMP/Hello, world!.exe", discard_underscore_prefixed_variables=True))
+    print(execute_file("BB files/Testing/01 Counting.bb"))
+    print(execute_extended_file("BB files/Hello, world!.bbe"))
+    print(execute_extended_file("BB files/Factorial.bbe"))
