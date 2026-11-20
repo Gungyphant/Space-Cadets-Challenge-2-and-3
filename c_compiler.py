@@ -85,3 +85,11 @@ def compile_to_c_file(bb_filepath: str, c_filepath: str) -> None:
     with open(bb_filepath) as f:
         bare_bones_file = f.read()
     _bb_to_c_file(_process_program(bare_bones_file), c_filepath)
+
+
+def extended_compile_to_c_file(bbe_filepath: str, c_filepath: str) -> None:
+    """Compiles a Bare Bones Extended file to a C file"""
+    with open(bbe_filepath) as f:
+        bare_bones_extended_file = f.read()
+    bare_bones_file = _de_extend_code(bare_bones_extended_file.splitlines())
+    _bb_to_c_file(_process_program(bare_bones_file), c_filepath)
