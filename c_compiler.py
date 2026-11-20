@@ -71,3 +71,10 @@ def _bb_to_c(code: list[ProcessedLine]) -> str:
                 raise ValueError(f"Unexpected Command {command}")
 
     return C_START_BOILERPLATE + "\n".join(c_code) + C_END_BOILERPLATE
+
+
+def _bb_to_c_file(code: list[ProcessedLine], c_filepath: str) -> None:
+    """Convert BB code to C code and write it to a file"""
+    c_code = _bb_to_c(code)
+    with open(c_filepath, "w") as f:
+        f.write(c_code)
