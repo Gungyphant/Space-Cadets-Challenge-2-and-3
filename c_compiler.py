@@ -78,3 +78,10 @@ def _bb_to_c_file(code: list[ProcessedLine], c_filepath: str) -> None:
     c_code = _bb_to_c(code)
     with open(c_filepath, "w") as f:
         f.write(c_code)
+
+
+def compile_to_c_file(bb_filepath: str, c_filepath: str) -> None:
+    """Compile a Bare Bones file to a C file"""
+    with open(bb_filepath) as f:
+        bare_bones_file = f.read()
+    _bb_to_c_file(_process_program(bare_bones_file), c_filepath)
