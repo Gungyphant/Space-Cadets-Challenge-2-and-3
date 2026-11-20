@@ -1,5 +1,5 @@
 class ProgramError(Exception):
-    """General class for all errors with user code (as opposed to bugs in this program)"""
+    """General class for all errors with user code (as opposed to bugs in the executors)"""
 
 
 class UndefinedVariableError(ProgramError):
