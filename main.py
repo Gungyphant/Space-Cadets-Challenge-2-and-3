@@ -311,5 +311,5 @@ def _do_test():
     run_all_benchmarks(parse_code, program_executor_kwargs={"print_errors": True, "loudness": 0, "timeout": 1.0, "discard_underscore_prefixed_variables": True}, test_file_location="BB files/De-extended Testing")
 
 if __name__ == "__main__":
-    parse_file("BB files/Typing test.bb")
-    # _do_test()
+    # parse_file("BB files/Typing test.bb")
+    _do_test()

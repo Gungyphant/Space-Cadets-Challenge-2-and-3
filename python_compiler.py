@@ -68,6 +68,9 @@ def _compile_code(code: list[ProcessedLine]) -> CodeType:
             case _:
                 raise ValueError(f"Unexpected Command {command}")
 
+    if depth != 0:
+        raise _InnerCodeError(SyntacticalError(f"There is a mismatch between the number of whiles and the number of ends"), -1, "")
+
     return compile("\n".join(python_code), "<Compiled BB code>", "exec")
 
 
