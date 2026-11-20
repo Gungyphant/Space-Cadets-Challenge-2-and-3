@@ -15,5 +15,7 @@ print _lowercase_l;
 print _lowercase_d;
 print _exclamation_mark;
 # windows newline:
-print _CR;
-print _LF;
+#print _CR;
+#print _LF;
+# bare print does environment newline:
+print;
