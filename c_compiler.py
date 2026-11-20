@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-from errors import SyntacticalError
+from errors import SyntacticalError, NegativeError, ProgramError
 from extended import _de_extend_code
 from main import ProcessedLine, Command, VariableDict, _process_program
 
@@ -70,6 +70,10 @@ def _bb_to_c(code: list[ProcessedLine]) -> str:
             case _:
                 raise ValueError(f"Unexpected Command {command}")
 
+    # Add stderr-writing to get the value of the variables
+    for variable_name in known_variables:
+        c_code.append(f"    fprintf(stderr, \"{variable_name}=%i\\n\", {variable_name});\n")
+
     return C_START_BOILERPLATE + "\n".join(c_code) + C_END_BOILERPLATE
 
 
@@ -120,3 +124,36 @@ def compile_c_file(c_filepath: str, executable_filepath: str | None = None, *, o
         raise SyntacticalError(result.stderr.decode(sys.stdout.encoding))
     if output_warnings:
         print(result.stdout.decode(sys.stdout.encoding).split("\x0c")[-1], end="")
+
+
+def _run_exe(executable_filepath: str, *, discard_underscore_prefixed_variables: bool = False) -> VariableDict:
+    """Run a BB program that has been compiled to an exe, and return the values of the variables"""
+    # The executables write prints to stdout, and variable values to stderr; allow stdout to go to
+    #  python's stdout (i.e. print it), but capture stderr into process_result:
+    process_result = subprocess.run(executable_filepath, stderr=subprocess.PIPE)
+    if process_result.returncode != 0:
+        match process_result.returncode:
+            case 1:
+                raise NegativeError()
+            case _:
+                raise ProgramError()
+    return {
+        var: int(val)
+        for var, val in (
+            n.split("=")
+            for n in
+            process_result.stderr.decode(sys.stderr.encoding).split("\r\n")
+            if n
+            and not (discard_underscore_prefixed_variables and n.startswith("_"))
+        )
+    }
+
+
+if __name__ == "__main__":
+    compile_to_c_file("BB files/Testing/01 Counting.bb", "TEMP/01 Counting.c")
+    compile_c_file("TEMP/01 Counting.c", "TEMP/01 Counting.exe")
+    print(_run_exe("TEMP/01 Counting.exe"))
+
+    extended_compile_to_c_file("BB files/Hello, world!.bbe", "TEMP/Hello, world!.c")
+    compile_c_file("TEMP/Hello, world!.c", "TEMP/Hello, world!.exe")
+    print(_run_exe("TEMP/Hello, world!.exe", discard_underscore_prefixed_variables=True))
