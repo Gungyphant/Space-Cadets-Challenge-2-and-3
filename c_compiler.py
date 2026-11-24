@@ -76,6 +76,9 @@ def _bb_to_c(code: list[ProcessedLine]) -> str:
             case _:
                 raise ValueError(f"Unexpected Command {command}")
 
+    if depth != 1:
+        raise _InnerCodeError(SyntacticalError(f"A `while` went unclosed"), -1, "")
+
     # Add stderr-writing to get the value of the variables
     for variable_name in known_variables:
         c_code.append(f"    fprintf(stderr, \"{variable_name}=%i\\n\", {variable_name});")
