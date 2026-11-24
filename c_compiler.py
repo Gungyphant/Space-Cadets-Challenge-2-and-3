@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from typing import Any, Callable
 
 from errors import SyntacticalError, NegativeError, ProgramError
 from extended import _de_extend_code
@@ -151,38 +152,48 @@ def _run_exe(executable_filepath: str, *, discard_underscore_prefixed_variables:
     }
 
 
-def execute_file(filepath: str, **kwargs) -> VariableDict:
+def __inner_execute_c_file(filepath: str, compiler: Callable[[str, str], None], kwargs: dict[str, Any], debug: bool, *, discard_underscore_prefixed_variables) -> dict[str, int]:
+    try:
+        compiler(filepath, "TEMP.c")
+        _compile_c_file("TEMP.c", "TEMP.exe", **kwargs)
+        result = _run_exe("TEMP.exe", discard_underscore_prefixed_variables=discard_underscore_prefixed_variables)
+    except:
+        if not debug:
+            os.remove("TEMP.c")
+            os.remove("TEMP.exe")
+        raise
+    else:
+        os.remove("TEMP.c")
+        os.remove("TEMP.exe")
+    return result
+
+
+def execute_file(filepath: str, *, debug: bool = False, **kwargs) -> VariableDict:
     """Execute a BB file, via compiling it to an executable
 
     :param filepath: The path to the BB file
+    :param debug: Toggles debug mode
+    :param kwargs: Keyword-arguments passed onto :meth:`_compile_c_file`
     :return: A dictionary of variable-value pairs
     """
-    compile_to_c_file(filepath, "TEMP.c")
-    _compile_c_file("TEMP.c", "TEMP.exe", **kwargs)
-    result = _run_exe("TEMP.exe", discard_underscore_prefixed_variables=False)
-    os.remove("TEMP.c")
-    os.remove("TEMP.exe")
-    return result
+    return __inner_execute_c_file(filepath, compile_to_c_file, kwargs, debug, discard_underscore_prefixed_variables=False)
 
 
-def execute_extended_file(filepath: str, **kwargs) -> VariableDict:
+def execute_extended_file(filepath: str, *, debug: bool = False, **kwargs) -> VariableDict:
     """Execute a BBE file, via compiling it to an executable
 
     :param filepath: The path to the BBE file
+    :param debug: Toggles debug mode
+    :param kwargs: Keyword-arguments passed onto :meth:`_compile_c_file`
     :return: A dictionary of variable-value pairs
     """
-    extended_compile_to_c_file(filepath, "TEMP.c")
-    _compile_c_file("TEMP.c", "TEMP.exe", **kwargs)
-    result = _run_exe("TEMP.exe", discard_underscore_prefixed_variables=True)
-    os.remove("TEMP.c")
-    os.remove("TEMP.exe")
-    return result
+    return __inner_execute_c_file(filepath, extended_compile_to_c_file, kwargs, debug, discard_underscore_prefixed_variables=True)
 
 
 if __name__ == "__main__":
-    print(execute_file("BB files/Testing/01 Counting.bb"))
-    print(execute_extended_file("BB files/Hello, world!.bbe"))
-    print(execute_extended_file("BB files/Factorial.bbe"))
+    print(execute_file("BB files/Testing/01 Counting.bb", debug=True))
+    print(execute_extended_file("BB files/Hello, world!.bbe", debug=True))
+    print(execute_extended_file("BB files/Factorial.bbe", debug=True))
     # execute_extended_file("BB files/Fibbonacci.bbe")
 
     extended_compile_to_c_file("BB files/Primes.bbe", "Primes.c")
