@@ -3,9 +3,10 @@ import subprocess
 import sys
 from typing import Any, Callable
 
-from errors import SyntacticalError, NegativeError, ProgramError
+from errors import SyntacticalError, NegativeError, TimeoutError, _InnerCodeError
 from extended import _de_extend_code
 from main import ProcessedLine, Command, VariableDict, _process_program
+from utils import format_time
 
 C_START_BOILERPLATE = "#include <stdio.h>\n\nint main(void)\n{\n"
 C_END_BOILERPLATE = "\n    return 0;\n}"
@@ -14,13 +15,13 @@ def _bb_to_c(code: list[ProcessedLine]) -> str:
     """Convert BB code to C code"""
     """Exit codes:
     0 - Successful
-    1 - NegativeError
+    non-zero n - NegativeError on line n
     """
     c_code = []
     variable_types = {}
     known_variables = set()
     depth = 1  # indent due to main()
-    for line in code:
+    for line_no, line in enumerate(code):
         if not line:
             c_code.append("")
             continue
@@ -129,34 +130,35 @@ def _compile_c_file(c_filepath: str, executable_filepath: str | None = None, *, 
         print(result.stdout.decode(sys.stdout.encoding).split("\x0c")[-1], end="")
 
 
-def _run_exe(executable_filepath: str, *, discard_underscore_prefixed_variables: bool = False) -> VariableDict:
+def _run_exe(executable_filepath: str, *, timeout: float | None = None, discard_underscore_prefixed_variables: bool = False) -> VariableDict:
     """Run a BB program that has been compiled to an exe, and return the values of the variables"""
     # The executables write prints to stdout, and variable values to stderr; allow stdout to go to
     #  python's stdout (i.e. print it), but capture stderr into process_result:
-    process_result = subprocess.run(executable_filepath, stderr=subprocess.PIPE)
-    if process_result.returncode != 0:
-        match process_result.returncode:
-            case 1:
-                raise NegativeError()
-            case _:
-                raise ProgramError()
-    return {
-        var: int(val)
-        for var, val in (
-            n.split("=")
-            for n in
-            process_result.stderr.decode(sys.stderr.encoding).split("\r\n")
-            if n
-            and not (discard_underscore_prefixed_variables and n.startswith("_"))
-        )
-    }
+    try:
+        process_result = subprocess.run(executable_filepath, stderr=subprocess.PIPE, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        timeout: float
+        raise _InnerCodeError(TimeoutError(f"The program exceeded the {format_time(timeout)} timeout"), -1, "")
+    else:
+        if process_result.returncode != 0:
+            raise _InnerCodeError(NegativeError(f"Tried to decrement a variable that was already 0"), process_result.returncode, "")
+        return {
+            var: int(val)
+            for var, val in (
+                n.split("=")
+                for n in
+                process_result.stderr.decode(sys.stderr.encoding).split("\r\n")
+                if n
+                and not (discard_underscore_prefixed_variables and n.startswith("_"))
+            )
+        }
 
 
-def __inner_execute_c_file(filepath: str, compiler: Callable[[str, str], None], kwargs: dict[str, Any], debug: bool, *, discard_underscore_prefixed_variables) -> dict[str, int]:
+def __inner_execute_c_file(filepath: str, compiler: Callable[[str, str], None], timeout: float | None, kwargs: dict[str, Any], debug: bool, *, discard_underscore_prefixed_variables) -> dict[str, int]:
     try:
         compiler(filepath, "TEMP.c")
         _compile_c_file("TEMP.c", "TEMP.exe", **kwargs)
-        result = _run_exe("TEMP.exe", discard_underscore_prefixed_variables=discard_underscore_prefixed_variables)
+        result = _run_exe("TEMP.exe", timeout=timeout, discard_underscore_prefixed_variables=discard_underscore_prefixed_variables)
     except:
         if not debug:
             os.remove("TEMP.c")
@@ -168,26 +170,29 @@ def __inner_execute_c_file(filepath: str, compiler: Callable[[str, str], None], 
     return result
 
 
-def execute_file(filepath: str, *, debug: bool = False, **kwargs) -> VariableDict:
+def execute_file(filepath: str, *, timeout: float | None = None, debug: bool = False, **kwargs) -> VariableDict:
     """Execute a BB file, via compiling it to an executable
 
     :param filepath: The path to the BB file
+    :param timeout: The timeout of the program execution
     :param debug: Toggles debug mode
     :param kwargs: Keyword-arguments passed onto :meth:`_compile_c_file`
     :return: A dictionary of variable-value pairs
     """
-    return __inner_execute_c_file(filepath, compile_to_c_file, kwargs, debug, discard_underscore_prefixed_variables=False)
+    return __inner_execute_c_file(filepath, compile_to_c_file, timeout, kwargs, debug, discard_underscore_prefixed_variables=False)
 
 
-def execute_extended_file(filepath: str, *, debug: bool = False, **kwargs) -> VariableDict:
+def execute_extended_file(filepath: str, *, timeout: float | None = None, debug: bool = False, **kwargs) -> VariableDict:
     """Execute a BBE file, via compiling it to an executable
 
     :param filepath: The path to the BBE file
+    :param timeout: The timeout of the program execution
     :param debug: Toggles debug mode
     :param kwargs: Keyword-arguments passed onto :meth:`_compile_c_file`
     :return: A dictionary of variable-value pairs
     """
     return __inner_execute_c_file(filepath, extended_compile_to_c_file, kwargs, debug, discard_underscore_prefixed_variables=True)
+    return __inner_execute_c_file(filepath, extended_compile_to_c_file, timeout, kwargs, debug, discard_underscore_prefixed_variables=True)
 
 
 if __name__ == "__main__":
