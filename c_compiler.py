@@ -1,6 +1,8 @@
 import os
+import random
 import subprocess
 import sys
+import tempfile
 from typing import Any, Callable
 
 from errors import SyntacticalError, NegativeError, TimeoutError, _InnerCodeError
@@ -31,7 +33,7 @@ def _bb_to_c(code: list[ProcessedLine]) -> str:
                 c_code.append(f"{"    " * depth}{variable_name} += 1;")
 
             case Command.DECR:
-                c_code.append(f"{"    " * depth}if ({variable_name} == 0) {{ return 1; }}")
+                c_code.append(f"{"    " * depth}if ({variable_name} == 0) {{ return {line_no + 1}; }}")
                 c_code.append(f"{"    " * depth}{variable_name} -= 1;")
 
             case Command.CLEAR:
@@ -191,14 +193,33 @@ def execute_extended_file(filepath: str, *, timeout: float | None = None, debug:
     :param kwargs: Keyword-arguments passed onto :meth:`_compile_c_file`
     :return: A dictionary of variable-value pairs
     """
-    return __inner_execute_c_file(filepath, extended_compile_to_c_file, kwargs, debug, discard_underscore_prefixed_variables=True)
     return __inner_execute_c_file(filepath, extended_compile_to_c_file, timeout, kwargs, debug, discard_underscore_prefixed_variables=True)
 
 
-if __name__ == "__main__":
-    print(execute_file("BB files/Testing/01 Counting.bb", debug=True))
-    print(execute_extended_file("BB files/Hello, world!.bbe", debug=True))
-    print(execute_extended_file("BB files/Factorial.bbe", debug=True))
-    # execute_extended_file("BB files/Fibbonacci.bbe")
+_TEMP_DIR = tempfile.gettempdir()
 
-    extended_compile_to_c_file("BB files/Primes.bbe", "Primes.c")
+
+def _test_compile_wrapper(code: list[str]) -> str:
+    """Takes the BB code as a list of strings; returns the filepath to the exe"""
+    id = random.randint(0, 100000)
+    _bb_to_c_file(_process_program(code), f"{_TEMP_DIR}/{id}.c")
+    _compile_c_file(f"{_TEMP_DIR}/{id}.c", f"{_TEMP_DIR}/{id}.exe", optimisation_level=3)
+    return f"{_TEMP_DIR}/{id}.exe"
+
+
+
+def _do_test():
+    from testing_tools import run_all_tests, run_all_benchmarks
+    run_all_tests(program_compiler=_test_compile_wrapper, program_executor=_run_exe, program_executor_kwargs={"timeout": 3, "discard_underscore_prefixed_variables": True}, test_file_location="BB files/De-extended Testing")
+    print()
+    run_all_benchmarks(program_compiler=_test_compile_wrapper, program_executor=_run_exe, program_executor_kwargs={"timeout": 3, "discard_underscore_prefixed_variables": True}, test_file_location="BB files/De-extended Testing")
+
+
+if __name__ == "__main__":
+    _do_test()
+    # print(execute_file("BB files/Testing/01 Counting.bb", debug=True))
+    # print(execute_extended_file("BB files/Hello, world!.bbe", debug=True))
+    # print(execute_extended_file("BB files/Factorial.bbe", debug=True))
+    # # execute_extended_file("BB files/Fibbonacci.bbe")
+    #
+    # extended_compile_to_c_file("BB files/Primes.bbe", "Primes.c")

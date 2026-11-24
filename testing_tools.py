@@ -241,7 +241,11 @@ def _test_everything():
     _do_test()
 
     from python_compiler import _do_test
-    print("\n\ncompiler:")
+    print("\n\npython_compiler:")
+    _do_test()
+
+    from c_compiler import _do_test
+    print("\n\nc_compiler:")
     _do_test()
 
 
