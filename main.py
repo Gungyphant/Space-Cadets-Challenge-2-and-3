@@ -235,6 +235,8 @@ def _parse_code(code: list[ProcessedLine], variables: VariableDict, variable_typ
     # TODO missing feature: make it output the line again when loudness == 2
 
     # if timeout < float("inf"):
+    if timeout <= 0:
+        raise TimeoutError(f"_parse_code was called with non-positive timeout {timeout}")
     start_time = time.time()
 
     while_mode = False
@@ -267,7 +269,7 @@ def _parse_code(code: list[ProcessedLine], variables: VariableDict, variable_typ
         else:
             if command == Command.WHILE:
                 while_depth += 1
-            elif command == Command.END:  # Is an end command
+            elif command == Command.END:
                 while_depth -= 1
 
             if command == Command.END and while_depth < 0:
